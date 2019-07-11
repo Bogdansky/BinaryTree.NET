@@ -4,79 +4,57 @@ using System.Text;
 
 namespace BinaryTree
 {
-    class BinaryTree
+    class BinaryTree<T> where T: IComparable<T>
     {
-        private List<Node> nodes;
-        private Node top;
-        private int size;
-        public int Size { get; }
+        private Node<T> root;
 
-        public BinaryTree()
+        public int Size { get; private set; }
+
+        #region Add and Set
+
+        public bool SetRoot(T value)
         {
-            nodes = new List<Node>();
+            if (root is null)
+            {
+                root = new Node<T>
+                {
+                    Value = value
+                };
+                Size++;
+            }
+            return root != null;
         }
 
-        public bool SetTop(Node node)
+        public Node<T> GetRoot()
         {
-            if (top is null)
-            {
-                top = node;
-            }
-            return top != null;
+            return root;
         }
 
-        public Node GetTop()
+        public bool AppendNode(T value)
         {
-            return top;
+            if (root != null)
+            {
+                bool added = root.Add(value);
+                if (added)
+                {
+                    Size++;
+                }
+                return added;
+            }
+            return SetRoot(value);
         }
+        #endregion
 
-        public bool AppendNode(Node node)
-        {
-            if (top != null)
-            {
-                return AppendNode(node, top);
-            }
-            return SetTop(node);
-        }
-
-        private bool AppendNode(Node node, Node currentNode)
-        {
-            if (currentNode.Value < node.Value)
-            {
-                return Append(node, currentNode.LeftNode);
-            }
-            else if (currentNode.Value > node.Value)
-            {
-                return Append(node, currentNode.RightNode);
-            }
-            else
-            {
-                return false;
-            }
-        }
-
-        private bool Append(Node node, Node currentNode)
-        {
-            if (currentNode is null)
-            {
-                currentNode = node;
-                return true;
-            }
-            else
-            {
-                return AppendNode(node, currentNode);
-            }
-        }
-
+        #region Search
         // поиск в ширину
-        public Node BreadthFirstSearch(int value)
+        public Node<T> BreadthFirstSearch(T value)
         {
-            Queue<Node> queue = new Queue<Node>();
-            queue.Enqueue(GetTop());
-            while(queue.Count != 0)
+            Queue<Node<T>> queue = new Queue<Node<T>>();
+            queue.Enqueue(root);
+            while (queue.Count != 0)
             {
-                Node node = queue.Dequeue();
-                if (node.Value == value)
+                Node<T> node = queue.Dequeue();
+                if (node.Value.CompareTo(value) == 0)
                 {
                     return node;
                 }
@@ -90,25 +68,60 @@ namespace BinaryTree
         }
 
         // поиск в глубину
-        public Node DepthFirstSearch(int value)
+        public Node<T> DepthFirstSearch(T value)
         {
-            return DepthFirstSearch(value, GetTop());
+            return DepthFirstSearch(value, root);
         }
 
-        private Node DepthFirstSearch(int value, Node currentNode)
+        private Node<T> DepthFirstSearch(T value, Node<T> currentNode)
         {
-            if (currentNode is null || currentNode.Value == value)
+            if (currentNode is null)
             {
                 return currentNode;
             }
-            else if (currentNode.Value > value)
+            var result = currentNode.Value.CompareTo(value);
+            switch(result)
             {
-                return DepthFirstSearch(value, currentNode.RightNode);
-            }
-            else
-            {
-                return DepthFirstSearch(value, currentNode.LeftNode);
+                case 0: return currentNode;
+                case 1: return DepthFirstSearch(value, currentNode.RightNode);
+                default: return DepthFirstSearch(value, currentNode.LeftNode);
             }
         }
+        #endregion
+
+        #region Research
+        public List<T> InOrderResearch()
+        {
+            List<T> nodes = new List<T>();
+            if (root is null)
+            {
+                return null;
+            }
+            InOrderResearch(root, ref nodes);
+            return nodes;
+        }
+        public void InOrderResearch(Node<T> root, ref List<T> nodes)
+        {
+            if (root is null)
+            {
+                return;
+            }
+            InOrderResearch(root.LeftNode, ref nodes);
+            nodes.Add(root.Value);
+            InOrderResearch(root.RightNode, ref nodes);
+        }
+
+        public void PreOrderResearch(Node<T> currentNode, ref List<T> nodes)
+        {
+            if (currentNode is null)
+            {
+                return;
+            }
+            nodes.Add(currentNode.Value);
+            PreOrderResearch(currentNode.LeftNode, ref nodes);
+            PreOrderResearch(currentNode.RightNode, ref nodes);
+        }
+
+        #endregion
     }
 }
